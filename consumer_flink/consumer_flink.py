@@ -129,107 +129,6 @@ class Model(ScalarFunction):
         self.is_model_trained = False
         self.training_data = []       
 
-#     def eval(self, attrib1, attrib2, attrib3, label):
-#         # Online learning, that is, training models one by one
-#         xi = [attrib1, attrib2, attrib3]
-#         yi = [label]
-
-#         # Train the model on the first win1 data point and make subsequent predictions
-#         if not self.is_model_trained:
-#             self.training_data.append((xi, yi))
-#             if len(self.training_data) == self.win1:
-#                 X_train, y_train = zip(*self.training_data)
-#                 self.classifier.fit(X_train, y_train)
-#                 self.is_model_trained = True
-#                 self.dump_lgb_model()
-
-#         else:
-#             y_pred = self.classifier.predict([xi])
-
-#             y_true = tuple(yi)
-#             y_pred = tuple(y_pred)
-#             self.metric_counter.inc(y_true == y_pred)
-#             self.metric = self.metric.update(y_true, y_pred)
-#             self.t.append(self.i)
-#             self.m.append(self.metric.get() * 100)
-#             self.yt.append(yi)
-#             self.yp.append(y_pred)
-#             self.xt.append(xi)
-           
-#             if self.i > 2 * self.win1:
-#                 yt_window = self.yt[self.i - self.win1:]
-#                 yp_window= self.yp[self.i - self.win1:]
-
-#                 prev_yt_window = self.yt[self.i - 2*self.win1:self.i - self.win1]
-#                 prev_yp_window = self.yp[self.i - 2*self.win1:self.i - self.win1]
-
-
-#                 acc = accuracy_score(yt_window, yp_window)
-#                 prev_acc = accuracy_score(prev_yt_window, prev_yp_window)
-
-#                 precision = precision_score(yt_window, yp_window)
-#                 recall = recall_score(yt_window, yp_window)
-#                 f1 = f1_score(yt_window, yp_window)
-
-#                 latency = self.calculate_latency(yt_window, yp_window)  # Replace with your latency calculation logic
-#                 throughput = self.calculate_throughput(yt_window, yp_window)  # Replace with your throughput calculation logic
-#                 predictions = pd.Series(self.yt[self.i - self.win1:])
-#                 labels = pd.Series(self.yp[self.i - self.win1:])
-#                 try:
-#                     BD3.add_element(np.array(predictions, ndmin=1), np.array(labels, ndmin=1))
-#                 except:
-#                     pass
-
-#                 if (self.d == 0) and (self.BD3.detected_warning_zone()):
-#                     self.x_new.append(xi)
-#                     self.y_new.append(yi)
-#                     self.d = 1
-#                 if self.d == 1:
-#                     self.tt = len(self.y_new)
-#                     if self.BD3.detected_change():
-#                         self.dr.append(self.i)
-#                         self.f = self.i
-#                         if self.tt < self.win1:
-#                             self.classifier.fit(self.xt[self.i - self.win1:], self.yt[self.i - self.win1:])
-#                         else:
-#                             self.classifier.fit(self.x_new, self.y_new)
-#                         self.d = 2
-#                         self.BD3=BDDDC(warn_level=self.a, drift_level=self.b)
-#                     elif self.tt == self.win2:
-#                         self.x_new = []
-#                         self.y_new = []
-#                         self.d = 0
-#                     else:
-#                         self.x_new.append(xi)
-#                         self.y_new.append(yi)
-#                 if self.d == 2:
-#                     self.tt = len(self.y_new)
-#                     self.x_new.append(xi)
-#                     self.y_new.append(yi)
-#                     if self.tt >= self.win1:
-#                         if self.th == 0:
-#                             self.classifier.fit(self.x_new, self.y_new)
-#                             self.th = 1
-#                         if (self.th == 1) and (self.tt == self.win2):
-#                             self.classifier.fit(self.x_new, self.y_new)
-#                             self.x_new = []
-#                             self.y_new = []
-#                             self.d = 0
-#                             self.th = 0
-#                     self.dump_lgb_model()                  
-                    
-#                 # Calculate average accuracy
-#                 avg_accuracy = sum(self.m[-self.win1:]) / self.win1
-# #                 avg_precision = sum(precision) / len(precision)
-# #                 avg_recall = sum(recall) / len(recall)
-# #                 avg_f1 = sum(f1) / len(f1)
-
-#                 # Calculate latency (replace with your latency calculation logic)
-#                 latency = self.calculate_latency(yt_window, yp_window)
-#                 # Calculate throughput (replace with your throughput calculation logic)
-#                 throughput = self.calculate_throughput(yt_window, yp_window)
-#                 return (avg_accuracy, precision, recall, f1, latency, throughput)
-
 
 
 
@@ -478,17 +377,7 @@ st_env.execute_sql(
     )
     """
 )
-# Define output sink Dates TIMESTAMP, Descript STRING,
-# st_env.execute_sql(
-#     """
-#     CREATE TABLE sink (
-#        _c0 ROW<`avg_accuracy` FLOAT, `avg_precision` FLOAT,`avg_recall` FLOAT, `avg_f1` FLOAT,`latency` FLOAT,`throughput` FLOAT>
-#     ) WITH (
-#         'connector' = 'print',
-#         'print-identifier' = 'Drift data: '
-# )
 
-#  """)
 
 
 # Define output sink Dates TIMESTAMP, Descript STRING,
@@ -542,26 +431,6 @@ st_env.from_path("source")\
 .select("train_predict(attrib1, attrib2, attrib3, label)") \
 .insert_into("sink") 
 
-
-
-# # # Fetch data from the sink table
-# result = st_env.sql_query("SELECT * FROM sink").execute().get_result()
-
-# # Iterate over the result rows
-# for row in result:
-#     # Access the individual values within the ROW object
-#     avg_accuracy = row[0]['avg_accuracy']
-#     avg_precision = row[0]['avg_precision']
-#     avg_recall = row[0]['avg_recall']
-#     avg_f1 = row[0]['avg_f1']
-#     latency = row[0]['latency']
-#     throughput = row[0]['throughput']
-
-#     # Insert the values into the target database sink
-#     st_env.execute_sql(f"""
-#         INSERT INTO target_sink
-#         VALUES ({avg_accuracy}, {avg_precision}, {avg_recall}, {avg_f1}, {latency}, {throughput})
-#     """)
 
 
 
